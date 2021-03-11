@@ -1,11 +1,12 @@
 ﻿import xbmc, xbmcaddon
 import xbmcvfs
 import json
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as EleTree
 from os import path
 
 addon = xbmcaddon.Addon()
 addon_name = addon.getAddonInfo('name')
+addon_version = addon.getAddonInfo('version')
 
 
 def jsonrpc(query):
@@ -20,7 +21,7 @@ def jsonrpc(query):
 
 
 def log(msg, level=xbmc.LOGDEBUG):
-    xbmc.log('[%s] %s' % (addon_name, msg), level=level)
+    xbmc.log('[%s %s] %s' % (addon_name, addon_version, msg), level=level)
 
 
 class NFOUpdater(xbmc.Monitor):
@@ -28,7 +29,7 @@ class NFOUpdater(xbmc.Monitor):
         xbmc.Monitor.__init__(self)
         log('Monitor started')
 
-        self.methodDict = {"VideoLibrary.OnUpdate": self.VideoLibraryOnUpdate,
+        self.methodDict = {"VideoLibrary.OnUpdate": self.videolibrary_onupdate,
                            }
 
     @staticmethod
@@ -39,11 +40,7 @@ class NFOUpdater(xbmc.Monitor):
         log("Notification received: %s - %s" % (method, data))
         self.methodDict.get(method, self.err)(data)
 
-    def main(self):
-        while not self.abortRequested():
-            xbmc.sleep(10000)
-
-    def VideoLibraryOnUpdate(self, json_data):
+    def videolibrary_onupdate(self, json_data):
         data = json.loads(json_data)
         item = data['item']
 
@@ -60,9 +57,12 @@ class NFOUpdater(xbmc.Monitor):
             return False
 
         query = {"method": mediaquery, "params": {mediatype: item['id'], "properties": ["file"]}}
-        self.updateNFO(jsonrpc(query)[details], data['playcount'])
+        result = jsonrpc(query)
+        if result is not None:
+            self.update_nfo(result[details], data['playcount'])
 
-    def updateNFO(self, data, playcount):
+    @staticmethod
+    def update_nfo(data, playcount):
 
         nfo = "%s.nfo" % path.splitext(data['file'])[0]
 
@@ -70,22 +70,28 @@ class NFOUpdater(xbmc.Monitor):
             log('No NFO for file "%s"' % data['file'])
             return False
 
-        with xbmcvfs.File(nfo) as f: xml = ET.ElementTree(ET.fromstring(f.read()))
+        with xbmcvfs.File(nfo) as f: xml = EleTree.ElementTree(EleTree.fromstring(f.read()))
         root = xml.getroot()
 
         # looking for tag 'watched', create it if necessary and set content depending of playcount
-        xml_watched = ET.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
+        xml_watched = EleTree.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
         xml_watched.text = "true" if playcount > 0 else "false"
 
         # looking for tag 'playcount' create it if necessary and set content with playcount
-        xml_playcount = ET.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
+        xml_playcount = EleTree.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
         xml_playcount.text = str(playcount)
 
-        with xbmcvfs.File(nfo, 'w') as f: f.write(ET.tostring(root))
+        with xbmcvfs.File(nfo, 'w') as f: f.write(EleTree.tostring(root))
         log('NFO %s written.' % nfo)
+
+    # main loop
+    
+    def main(self):
+        while not self.abortRequested():
+            xbmc.sleep(10000)
 
 
 if __name__ == '__main__':
-    MY = NFOUpdater()
-    MY.main()
-    del MY
+    service = NFOUpdater()
+    service.main()
+    del service
