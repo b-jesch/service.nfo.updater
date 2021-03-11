@@ -1,7 +1,7 @@
 ﻿import xbmc, xbmcaddon
 import xbmcvfs
 import json
-import xml.etree.ElementTree as EleTree
+import xml.etree.ElementTree as ElTr
 from os import path
 
 addon = xbmcaddon.Addon()
@@ -70,18 +70,18 @@ class NFOUpdater(xbmc.Monitor):
             log('No NFO for file "%s"' % data['file'])
             return False
 
-        with xbmcvfs.File(nfo) as f: xml = EleTree.ElementTree(EleTree.fromstring(f.read()))
+        with xbmcvfs.File(nfo) as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
         root = xml.getroot()
 
         # looking for tag 'watched', create it if necessary and set content depending of playcount
-        xml_watched = EleTree.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
+        xml_watched = ElTr.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
         xml_watched.text = "true" if playcount > 0 else "false"
 
         # looking for tag 'playcount' create it if necessary and set content with playcount
-        xml_playcount = EleTree.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
+        xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
         xml_playcount.text = str(playcount)
 
-        with xbmcvfs.File(nfo, 'w') as f: f.write(EleTree.tostring(root))
+        with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root))
         log('NFO %s written.' % nfo)
 
     # main loop
