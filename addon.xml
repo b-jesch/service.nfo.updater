@@ -4,7 +4,7 @@
 		<import addon="xbmc.python" version="3.0.0"/>
 	</requires>
 	<extension point="xbmc.service" library="default.py" start="login"/>
-	<license point="xbmc.addon.metadata">
+	<extension point="xbmc.addon.metadata">
 		<summary lang="en">Watchedstate .NFO Updater</summary>
 		<description lang="en">This addon writes the watched state to the corresponding .nfo file as soon as it updated within the KODI library. This version is a complete rewrite of the old Watchedstate NFO updater from alberto</description>
 		<platform>all</platform>
