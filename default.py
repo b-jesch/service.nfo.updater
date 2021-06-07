@@ -34,7 +34,7 @@ class NFOUpdater(xbmc.Monitor):
 
     @staticmethod
     def err(data):
-        log("Could not proceed: %s" % data)
+        log("Discard: %s" % data)
 
     def onNotification(self, sender, method, data):
         log("Notification received: %s - %s" % (method, data))
@@ -59,7 +59,10 @@ class NFOUpdater(xbmc.Monitor):
         query = {"method": mediaquery, "params": {mediatype: item['id'], "properties": ["file"]}}
         result = jsonrpc(query)
         if result is not None:
-            self.update_nfo(result[details], data['playcount'])
+            try:
+                self.update_nfo(result[details], data['playcount'])
+            except KeyError as e:
+                log('Discard update of NFO: %s' % e)
 
     @staticmethod
     def update_nfo(data, playcount):
@@ -81,7 +84,8 @@ class NFOUpdater(xbmc.Monitor):
         xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
         xml_playcount.text = str(playcount)
 
-        with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root))
+        with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
+                                                                method='xml', xml_declaration=True))
         log('NFO %s written.' % nfo)
 
     # main loop
