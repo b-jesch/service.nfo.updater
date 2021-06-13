@@ -1,4 +1,5 @@
-﻿import xbmc, xbmcaddon
+﻿import xbmc
+import xbmcaddon
 import xbmcvfs
 import json
 import xml.etree.ElementTree as ElTr
@@ -42,7 +43,11 @@ class NFOUpdater(xbmc.Monitor):
 
     def videolibrary_onupdate(self, json_data):
         data = json.loads(json_data)
-        item = data['item']
+        try:
+            item = data['item']
+        except KeyError as e:
+            log('Discard notification: %s' % e)
+            return False
 
         if item['type'] == 'movie':
             mediaquery = "VideoLibrary.GetMovieDetails"
@@ -63,6 +68,7 @@ class NFOUpdater(xbmc.Monitor):
                 self.update_nfo(result[details], data['playcount'])
             except KeyError as e:
                 log('Discard update of NFO: %s' % e)
+                return False
 
     @staticmethod
     def update_nfo(data, playcount):
