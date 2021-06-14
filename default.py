@@ -45,30 +45,28 @@ class NFOUpdater(xbmc.Monitor):
         data = json.loads(json_data)
         try:
             item = data['item']
-        except KeyError as e:
-            log('Discard notification: %s' % e)
-            return False
 
-        if item['type'] == 'movie':
-            mediaquery = "VideoLibrary.GetMovieDetails"
-            mediatype = "movieid"
-            details = "moviedetails"
-        elif item['type'] == 'episode':
-            mediaquery = "VideoLibrary.GetEpisodeDetails"
-            mediatype = "episodeid"
-            details = "episodedetails"
-        else:
-            log('Could not determine media type: %s' % item['type'], level=xbmc.LOGERROR)
-            return False
-
-        query = {"method": mediaquery, "params": {mediatype: item['id'], "properties": ["file"]}}
-        result = jsonrpc(query)
-        if result is not None:
-            try:
-                self.update_nfo(result[details], data['playcount'])
-            except KeyError as e:
-                log('Discard update of NFO: %s' % e)
+            if item['type'] == 'movie':
+                mediaquery = "VideoLibrary.GetMovieDetails"
+                mediatype = "movieid"
+                details = "moviedetails"
+            elif item['type'] == 'episode':
+                mediaquery = "VideoLibrary.GetEpisodeDetails"
+                mediatype = "episodeid"
+                details = "episodedetails"
+            else:
+                log('Could not determine media type: %s' % item['type'], level=xbmc.LOGERROR)
                 return False
+
+            query = {"method": mediaquery, "params": {mediatype: item['id'], "properties": ["file"]}}
+            result = jsonrpc(query)
+
+            if result is not None:
+                self.update_nfo(result[details], data['playcount'])
+
+        except KeyError as e:
+            log('Discard update of NFO: %s' % e, level=xbmc.LOGERROR)
+            return False
 
     @staticmethod
     def update_nfo(data, playcount):
