@@ -65,7 +65,7 @@ class NFOUpdater(xbmc.Monitor):
                 self.update_nfo(result[details], data['playcount'])
 
         except KeyError as e:
-            log('Discard update of NFO: %s' % e, level=xbmc.LOGERROR)
+            log('Discard update of NFO: %s' % e.args, level=xbmc.LOGERROR)
             return False
 
     @staticmethod
@@ -77,20 +77,26 @@ class NFOUpdater(xbmc.Monitor):
             log('No NFO for file "%s"' % data['file'])
             return False
 
-        with xbmcvfs.File(nfo) as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
-        root = xml.getroot()
+        try:
+            with xbmcvfs.File(nfo, 'r') as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
+            root = xml.getroot()
 
-        # looking for tag 'watched', create it if necessary and set content depending of playcount
-        xml_watched = ElTr.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
-        xml_watched.text = "true" if playcount > 0 else "false"
+            # looking for tag 'watched', create it if necessary and set content depending of playcount
+            xml_watched = ElTr.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
+            xml_watched.text = "true" if playcount > 0 else "false"
 
-        # looking for tag 'playcount' create it if necessary and set content with playcount
-        xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
-        xml_playcount.text = str(playcount)
+            # looking for tag 'playcount' create it if necessary and set content with playcount
+            xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
+            xml_playcount.text = str(playcount)
 
-        with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
-                                                                method='xml', xml_declaration=True))
-        log('NFO %s written.' % nfo)
+            with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
+                                                                    method='xml', xml_declaration=True))
+            log('NFO %s written.' % nfo)
+            return True
+
+        except ElTr.ParseError as e:
+            log('Error processing NFO: %s' % e.msg, xbmc.LOGERROR)
+            return False
 
     # main loop
     
