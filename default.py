@@ -3,7 +3,7 @@ import xbmcaddon
 import xbmcvfs
 import json
 import xml.etree.ElementTree as ElTr
-from os import path
+import os
 
 addon = xbmcaddon.Addon()
 addon_name = addon.getAddonInfo('name')
@@ -62,20 +62,23 @@ class NFOUpdater(xbmc.Monitor):
             result = jsonrpc(query)
 
             if result is not None:
-                self.update_nfo(result[details], data['playcount'])
+                self.update_nfo(result[details], data['playcount'], item['type'])
 
         except KeyError as e:
             log('Discard update of NFO: %s' % e.args, level=xbmc.LOGERROR)
             return False
 
     @staticmethod
-    def update_nfo(data, playcount):
+    def update_nfo(data, playcount, data_type):
 
-        nfo = "%s.nfo" % path.splitext(data['file'])[0]
+        nfo = "%s.nfo" % os.path.splitext(data['file'])[0]
 
-        if not xbmcvfs.exists(nfo):
-            log('No NFO for file "%s"' % data['file'])
-            return False
+        if data_type == 'movie' and not xbmcvfs.exists(nfo):
+            log('No %s for file "%s"' % (nfo, data['file']))
+            nfo = os.path.join(os.path.dirname(data['file']), 'movie.nfo')
+            if not xbmcvfs.exists(nfo):
+                log('No %s for file "%s"' % (nfo, data['file']))
+                return False
 
         try:
             with xbmcvfs.File(nfo, 'r') as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
@@ -102,7 +105,7 @@ class NFOUpdater(xbmc.Monitor):
     
     def main(self):
         while not self.abortRequested():
-            xbmc.sleep(10000)
+            self.waitForAbort(1000)
 
 
 if __name__ == '__main__':
