@@ -92,8 +92,13 @@ class NFOUpdater(xbmc.Monitor):
             xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
             xml_playcount.text = str(playcount)
 
-            with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
-                                                                    method='xml', xml_declaration=True))
+            try:
+                with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
+                                                                        method='xml', xml_declaration=True))
+            except TypeError as e:
+                log('writing NFO causes an error: %s' % str(e))
+                with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8', method='xml'))
+
             log('NFO %s written.' % nfo)
             return True
 
