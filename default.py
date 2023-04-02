@@ -50,6 +50,10 @@ class NFOUpdater(xbmc.Monitor):
                 mediaquery = "VideoLibrary.GetMovieDetails"
                 mediatype = "movieid"
                 details = "moviedetails"
+            elif item['type'] == 'musicvideo':
+                mediaquery = "VideoLibrary.GetMusicVideoDetails"
+                mediatype = "musicvideoid"
+                details = "musicvideodetails"
             elif item['type'] == 'episode':
                 mediaquery = "VideoLibrary.GetEpisodeDetails"
                 mediatype = "episodeid"
@@ -74,17 +78,18 @@ class NFOUpdater(xbmc.Monitor):
         nfo = "%s.nfo" % os.path.splitext(data['file'])[0]
 
         if data_type == 'movie' and not xbmcvfs.exists(nfo):
-            log('No %s for file "%s"' % (nfo, data['file']))
+            log('No %s for file "%s", try movie.nfo' % (nfo, data['file']))
             nfo = os.path.join(os.path.dirname(data['file']), 'movie.nfo')
-            if not xbmcvfs.exists(nfo):
-                log('No %s for file "%s"' % (nfo, data['file']))
-                return False
+
+        if not xbmcvfs.exists(nfo):
+            log('No %s for file "%s"' % (nfo, data['file']))
+            return False
 
         try:
             with xbmcvfs.File(nfo, 'r') as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
             root = xml.getroot()
 
-            # looking for tag 'watched', create it if necessary and set content depending of playcount
+            # looking for tag 'watched', create it if necessary and set content depending on playcount
             xml_watched = ElTr.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
             xml_watched.text = "true" if playcount > 0 else "false"
 
