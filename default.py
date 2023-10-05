@@ -70,7 +70,7 @@ class NFOUpdater(xbmc.Monitor):
             result = jsonrpc(query)
 
             if result is not None:
-                self.update_nfo(result[details], data['playcount'], item['type'])
+                self.update_nfo(result[details], j_data['playcount'], item['type'])
 
         except KeyError as e:
             log('Discard update of NFO: %s' % e.args, level=xbmc.LOGERROR)
