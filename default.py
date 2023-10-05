@@ -31,20 +31,24 @@ class NFOUpdater(xbmc.Monitor):
         log('Monitor started')
 
         self.methodDict = {"VideoLibrary.OnUpdate": self.videolibrary_onupdate,
+                           "System.OnQuit": self.quit,
                            }
 
-    @staticmethod
-    def err(data):
-        log("Discard: %s" % data)
+    def err(self, method, data):
+        log("Discard: %s" % method)
+
+    def quit(self, method, data):
+        log("System.OnQuit received: %s, exiting application" %data)
+        exit(0)
 
     def onNotification(self, sender, method, data):
-        log("Notification received: %s - %s" % (method, data))
-        self.methodDict.get(method, self.err)(data)
+        self.methodDict.get(method, self.err)(method, data)
 
-    def videolibrary_onupdate(self, json_data):
-        data = json.loads(json_data)
+    def videolibrary_onupdate(self, method, data):
+        log("Notification received: %s - %s" % (method, data))
+        j_data = json.loads(data)
         try:
-            item = data['item']
+            item = j_data['item']
 
             if item['type'] == 'movie':
                 mediaquery = "VideoLibrary.GetMovieDetails"
@@ -115,7 +119,7 @@ class NFOUpdater(xbmc.Monitor):
     
     def main(self):
         while not self.abortRequested():
-            self.waitForAbort(1000)
+            self.waitForAbort(10000)
 
 
 if __name__ == '__main__':
