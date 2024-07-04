@@ -35,7 +35,7 @@ class NFOUpdater(xbmc.Monitor):
                            }
 
     def err(self, method, data):
-        log("Discard: %s" % method)
+        log("Discard notification %s" % method)
 
     def quit(self, method, data):
         log("System.OnQuit received: %s, exiting application" %data)
@@ -63,8 +63,7 @@ class NFOUpdater(xbmc.Monitor):
                 mediatype = "episodeid"
                 details = "episodedetails"
             else:
-                log('Could not determine media type: %s' % item['type'], level=xbmc.LOGERROR)
-                return False
+                raise KeyError('Video library type \'%s\' not supported' % item['type'])
 
             query = {"method": mediaquery, "params": {mediatype: item['id'], "properties": ["file"]}}
             result = jsonrpc(query)
@@ -73,7 +72,7 @@ class NFOUpdater(xbmc.Monitor):
                 self.update_nfo(result[details], j_data['playcount'], item['type'])
 
         except KeyError as e:
-            log('Discard update of NFO: %s' % e.args, level=xbmc.LOGERROR)
+            log('Key error: %s' % e, level=xbmc.LOGWARNING)
             return False
 
     @staticmethod
