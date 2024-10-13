@@ -4,6 +4,7 @@ import xbmcvfs
 import json
 import xml.etree.ElementTree as ElTr
 import os
+from datetime import datetime
 
 addon = xbmcaddon.Addon()
 addon_name = addon.getAddonInfo('name')
@@ -95,6 +96,11 @@ class NFOUpdater(xbmc.Monitor):
             # looking for tag 'watched', create it if necessary and set content depending on playcount
             xml_watched = ElTr.SubElement(root, 'watched') if root.find('watched') is None else root.find('watched')
             xml_watched.text = "true" if playcount > 0 else "false"
+
+            # add 'lastplayed' element if playcount > 0
+            if playcount > 0:
+                xml_lastplayed = ElTr.SubElement(root, 'lastplayed') if root.find('lastplayed') is None else root.find('lastplayed')
+                xml_lastplayed.text = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # looking for tag 'playcount' create it if necessary and set content with playcount
             xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
