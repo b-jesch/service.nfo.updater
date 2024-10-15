@@ -3,6 +3,7 @@ import xbmcaddon
 import xbmcvfs
 import json
 import xml.etree.ElementTree as ElTr
+from xml.dom import minidom
 import os
 from datetime import datetime
 
@@ -90,7 +91,7 @@ class NFOUpdater(xbmc.Monitor):
             return False
 
         try:
-            with xbmcvfs.File(nfo, 'r') as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
+            xml = ElTr.parse(nfo)
             root = xml.getroot()
 
             # looking for tag 'watched', create it if necessary and set content depending on playcount
@@ -101,17 +102,16 @@ class NFOUpdater(xbmc.Monitor):
             if playcount > 0:
                 xml_lastplayed = ElTr.SubElement(root, 'lastplayed') if root.find('lastplayed') is None else root.find('lastplayed')
                 xml_lastplayed.text = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                if root.find('lastplayed') is not None: root.remove(root.find('lastplayed'))
 
             # looking for tag 'playcount' create it if necessary and set content with playcount
             xml_playcount = ElTr.SubElement(root, 'playcount') if root.find('playcount') is None else root.find('playcount')
             xml_playcount.text = str(playcount)
 
-            try:
-                with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8',
-                                                                        method='xml', xml_declaration=True))
-            except TypeError as e:
-                log('writing NFO causes an error: %s' % str(e))
-                with xbmcvfs.File(nfo, 'w') as f: f.write(ElTr.tostring(root, encoding='utf8', method='xml'))
+            # convert to pretty formatted xml and write out
+            pretty_xml = minidom.parseString(ElTr.tostring(root)).toprettyxml(indent="  ")
+            with xbmcvfs.File(nfo, 'w') as f: f.write(pretty_xml)
 
             log('NFO %s written.' % nfo)
             return True
