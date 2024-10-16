@@ -91,7 +91,7 @@ class NFOUpdater(xbmc.Monitor):
             return False
 
         try:
-            xml = ElTr.parse(nfo)
+            with xbmcvfs.File(nfo, 'r') as f: xml = ElTr.ElementTree(ElTr.fromstring(f.read()))
             root = xml.getroot()
 
             # looking for tag 'watched', create it if necessary and set content depending on playcount
@@ -116,7 +116,7 @@ class NFOUpdater(xbmc.Monitor):
             log('NFO %s written.' % nfo)
             return True
 
-        except ElTr.ParseError as e:
+        except (ElTr.ParseError, FileNotFoundError) as e:
             log('Error processing NFO: %s' % e.msg, xbmc.LOGERROR)
             return False
 
