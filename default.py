@@ -1,4 +1,6 @@
-﻿import xbmc
+﻿from symbol import pass_stmt
+
+import xbmc
 import xbmcaddon
 import xbmcvfs
 import json
@@ -91,14 +93,12 @@ class NFOUpdater(xbmc.Monitor):
             return False
 
         try:
-            with xbmcvfs.File(nfo, 'r') as nfo_file: xml = nfo_file.read()
+            with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read().splitlines()
 
             # remove unwanted empty lines from nfo (different behaviour in Win and Linux)
-            x_xml = []
-            for line in xml.split('\n'):
-                if line.strip(): x_xml.append(line.strip())
-            xml = ElTr.ElementTree(ElTr.fromstring(''.join(x_xml)))
-            
+            for line in nfo_xml: nfo_xml.remove(line) if not line.strip() else None
+
+            xml = ElTr.ElementTree(ElTr.fromstring(''.join(nfo_xml)))
             root = xml.getroot()
 
             # looking for tag 'watched', create it if necessary and set content depending on playcount
