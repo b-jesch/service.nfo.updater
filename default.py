@@ -32,7 +32,7 @@ def cleanup_xml(xml_string):
 
     # remove unwanted empty lines from nfo (different behaviour in Win and Linux)
     for line in nfo_lines: nfo_lines.remove(line) if not line.strip() else None
-    return nfo_lines
+    return b''.join(nfo_lines)
 
 
 class NFOUpdater(xbmc.Monitor):
@@ -100,7 +100,7 @@ class NFOUpdater(xbmc.Monitor):
 
         try:
             with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read()
-            xml = ElTr.ElementTree(ElTr.fromstring(''.join(cleanup_xml(nfo_xml))))
+            xml = ElTr.ElementTree(ElTr.fromstring(cleanup_xml(nfo_xml)))
             root = xml.getroot()
 
             # looking for tag 'watched', create it if necessary and set content depending on playcount
