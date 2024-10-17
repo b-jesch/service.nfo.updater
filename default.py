@@ -1,6 +1,4 @@
-﻿from symbol import pass_stmt
-
-import xbmc
+﻿import xbmc
 import xbmcaddon
 import xbmcvfs
 import json
@@ -27,6 +25,14 @@ def jsonrpc(query):
 
 def log(msg, level=xbmc.LOGDEBUG):
     xbmc.log('[%s %s] %s' % (addon_name, addon_version, msg), level=level)
+
+
+def cleanup_xml(xml_string):
+    nfo_lines = xml_string.splitlines()
+
+    # remove unwanted empty lines from nfo (different behaviour in Win and Linux)
+    for line in nfo_lines: nfo_lines.remove(line) if not line.strip() else None
+    return nfo_lines
 
 
 class NFOUpdater(xbmc.Monitor):
@@ -93,12 +99,8 @@ class NFOUpdater(xbmc.Monitor):
             return False
 
         try:
-            with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read().splitlines()
-
-            # remove unwanted empty lines from nfo (different behaviour in Win and Linux)
-            for line in nfo_xml: nfo_xml.remove(line) if not line.strip() else None
-
-            xml = ElTr.ElementTree(ElTr.fromstring(''.join(nfo_xml)))
+            with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read()
+            xml = ElTr.ElementTree(ElTr.fromstring(''.join(cleanup_xml(nfo_xml))))
             root = xml.getroot()
 
             # looking for tag 'watched', create it if necessary and set content depending on playcount
@@ -117,8 +119,8 @@ class NFOUpdater(xbmc.Monitor):
             xml_playcount.text = str(playcount)
 
             # convert to pretty formatted xml and write out
-            pretty_xml = minidom.parseString(ElTr.tostring(root)).toprettyxml(indent="  ")
-            with xbmcvfs.File(nfo, 'w') as f: f.write(pretty_xml)
+            pretty_xml = minidom.parseString(ElTr.tostring(root)).toprettyxml(indent='\t', newl=os.linesep, encoding='UTF-8')
+            with xbmcvfs.File(nfo, 'w') as f: f.write(cleanup_xml(pretty_xml))
 
             log('NFO %s written.' % nfo)
             return True
