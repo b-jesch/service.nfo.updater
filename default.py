@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 
 addon = xbmcaddon.Addon()
+addon_id = addon.getAddonInfo('id')
 addon_name = addon.getAddonInfo('name')
 addon_version = addon.getAddonInfo('version')
 
@@ -24,7 +25,7 @@ def jsonrpc(query):
 
 
 def log(msg, level=xbmc.LOGDEBUG):
-    xbmc.log('[%s %s] %s' % (addon_name, addon_version, msg), level=level)
+    xbmc.log('[%s %s] %s' % (addon_id, addon_version, msg), level=level)
 
 
 def cleanup_xml(xml_string):
