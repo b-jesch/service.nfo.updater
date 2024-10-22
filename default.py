@@ -29,11 +29,14 @@ def log(msg, level=xbmc.LOGDEBUG):
 
 def cleanup_xml(xml_string):
     nfo_lines = xml_string.splitlines()
+    new_lines = []
 
     # remove unwanted empty lines from nfo (different behaviour in Win and Linux)
-    for line in nfo_lines: nfo_lines.remove(line) if not line.strip() else None
-    return b''.join(nfo_lines)
-
+    for line in nfo_lines: new_lines.append(line) if line.strip() else None
+    try:
+        return b'\n'.join(new_lines)
+    except TypeError:
+        return '\n'.join(new_lines)
 
 class NFOUpdater(xbmc.Monitor):
     def __init__(self, *args, **kwargs):
