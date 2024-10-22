@@ -6,7 +6,7 @@
 	<extension point="xbmc.service" library="default.py" start="login"/>
 	<extension point="xbmc.addon.metadata">
 		<summary lang="en">Watchedstate .NFO Updater</summary>
-		<description lang="en">This addon writes the watched state to the corresponding .nfo file as soon as it updated within the KODI library. This version is a complete rewrite of the old Watchedstate NFO updater from alberto</description>
+		<description lang="en">This addon writes the watched state to the corresponding .nfo file as soon as it updated within the KODI library. This version is a complete rewrite of the old Watchedstate NFO updater from alberto. Please note that some settings of the "Metadata Editor" in connection with this addon can lead to overlaps or errors when modifying NFO files.</description>
 		<platform>all</platform>
 		<license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
 		<forum>https://www.kodinerds.net/index.php/Thread/72246-methodDict-VideoLibrary-OnUpdate-funktioniert-seit-Update-auf-Kodi-19-nicht-mehr/</forum>
