@@ -1,6 +1,7 @@
 ﻿import xbmc
 import xbmcaddon
 import xbmcvfs
+import xbmcgui
 import json
 import xml.etree.ElementTree as ElTr
 from xml.dom import minidom
@@ -100,7 +101,7 @@ class NFOUpdater(xbmc.Monitor):
 
         if not xbmcvfs.exists(nfo):
             log('No %s for file "%s"' % (nfo, data['file']))
-            return False
+            raise FileNotFoundError
 
         try:
             with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read()
@@ -124,12 +125,15 @@ class NFOUpdater(xbmc.Monitor):
 
             # convert to pretty formatted xml and write out
             pretty_xml = minidom.parseString(ElTr.tostring(root)).toprettyxml(indent='\t', newl=os.linesep, encoding='UTF-8')
-            with xbmcvfs.File(nfo, 'w') as f: f.write(cleanup_xml(pretty_xml))
+            with xbmcvfs.File(nfo, 'w') as f: result = f.write(cleanup_xml(pretty_xml))
+            if result:
+                log('NFO %s written.' % nfo)
+                return True
+            else:
+                xbmcgui.Dialog().notification(addon_name, 'NFO update/creation failed.')
+                raise PermissionError('NFO update/creation failed.')
 
-            log('NFO %s written.' % nfo)
-            return True
-
-        except (ElTr.ParseError, FileNotFoundError) as e:
+        except (ElTr.ParseError, FileNotFoundError, PermissionError) as e:
             log('Error processing NFO: %s' % e.msg, xbmc.LOGERROR)
             return False
 
