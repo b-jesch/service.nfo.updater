@@ -74,7 +74,10 @@ class NFOUpdater(xbmc.Monitor):
         try:
             item = j_data.get('item', None)
             if item is None:
-                raise KeyError('Required data not included in JSON query')
+                raise KeyError('Not all required data included in JSON query')
+            elif j_data.get('playcount', None) is None:
+                raise KeyError('Missing playcount data in JSON query')
+
             elif item['type'] == 'movie':
                 details = "moviedetails"
                 nfo_root = 'movie'
@@ -92,7 +95,7 @@ class NFOUpdater(xbmc.Monitor):
 
             result = jsonrpc(query)
             if result is not None:
-                self.update_nfo(result[details], j_data.get('playcount', 0), item['type'], nfo_root)
+                self.update_nfo(result[details], j_data['playcount'], item['type'], nfo_root)
 
         except KeyError as e:
             log('Key error: %s' % e, level=xbmc.LOGWARNING)
@@ -112,8 +115,7 @@ class NFOUpdater(xbmc.Monitor):
             raise FileNotFoundError
 
         try:
-            with xbmcvfs.File(nfo, 'r') as nfo_file:
-                nfo_xml = nfo_file.read()
+            with xbmcvfs.File(nfo, 'r') as nfo_file: nfo_xml = nfo_file.read()
 
             # make Kodi's NFOs valid by adding a temporal root element as multiepisode NFOs are malformed XMLs
             xml = ElTr.ElementTree(ElTr.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<nfo>", nfo_xml) + "</nfo>"))
@@ -121,12 +123,10 @@ class NFOUpdater(xbmc.Monitor):
             for tag in root.findall(nforoot):
 
                 # find episode number in episode of single/multiepisode or modify other nfo
-                if tag.find('episode') is None or (
-                        tag.find('episode') is not None and tag.find('episode').text == str(data.get('episode', None))):
+                if tag.find('episode') is None or (tag.find('episode') is not None and tag.find('episode').text == str(data.get('episode', None))):
 
                     # looking for tag 'watched', create it if necessary and set content depending on playcount
-                    xml_watched = ElTr.SubElement(tag, 'watched') if tag.find('watched') is None else tag.find(
-                        'watched')
+                    xml_watched = ElTr.SubElement(tag, 'watched') if tag.find('watched') is None else tag.find('watched')
                     xml_watched.text = "true" if playcount > 0 else "false"
 
                     # add 'lastplayed' element if playcount > 0
